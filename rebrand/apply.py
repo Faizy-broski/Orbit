@@ -15,7 +15,7 @@ ARTICLE = re.compile(r"\b([Aa]) Orbit\b")
 LOWER = re.compile(r"(?<![\w./@-])plane(?![\w./@-])")
 
 SKIP_LINE = re.compile(
-    r"Plane Software|^\s*import\s|^\s*(//|\*|/\*)|X-Plane|Let Plane collect|how you use Plane|Total number of users in the Plane"
+    r"Plane Software|^\s*import\s|^\s*(//|\*|/\*)|X-Plane|Let Plane collect|how you use Plane|based on Plane|Total number of users in the Plane"
 )
 SKIP_PATH = re.compile(
     r"\.stories\.|/\.storybook/|\.d\.ts$|/billing/|apps/web/core/components/license/|constants/src/payment\.ts$|node_modules|/build/"

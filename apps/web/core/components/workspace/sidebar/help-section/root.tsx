@@ -57,7 +57,7 @@ export const HelpMenuRoot = observer(function HelpMenuRoot() {
         <CustomMenu.MenuItem onClick={() => window.open(ORBIT_SOURCE_URL, "_blank", "noopener,noreferrer")}>
           <div className="flex items-center gap-x-2 rounded-sm text-11">
             <User className="h-3.5 w-3.5 text-secondary" size={14} />
-            <span className="text-11">Source code (based on Orbit, AGPL-3.0)</span>
+            <span className="text-11">Source code (based on Plane, AGPL-3.0)</span>
           </div>
         </CustomMenu.MenuItem>
         <div className="my-1 border-t border-subtle" />
