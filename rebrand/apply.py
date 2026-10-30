@@ -49,7 +49,7 @@ EXACT_EDITS = {
         ('import { useTranslation } from "@plane/i18n";\n',
          'import { ORBIT_SOURCE_URL } from "@plane/constants";\nimport { useTranslation } from "@plane/i18n";\n'),
         ('window.open("mailto:sales@plane.so", "_blank")', 'window.open(ORBIT_SOURCE_URL, "_blank", "noopener,noreferrer")'),
-        ('{t("contact_sales")}', "Source code"),
+        ('{t("contact_sales")}', "Source code (based on Plane, AGPL-3.0)"),
     ],
     "packages/constants/src/endpoints.ts": [
         ('process.env.VITE_WEBSITE_URL || "https://plane.so"', f'process.env.VITE_WEBSITE_URL || "{ORBIT_URL}"'),
