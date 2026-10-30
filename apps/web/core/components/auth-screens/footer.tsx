@@ -5,41 +5,15 @@
  */
 
 import React from "react";
-import { AccentureLogo, DolbyLogo, SonyLogo, ZerodhaLogo } from "@plane/propel/icons";
-
-const BRAND_LOGOS: {
-  id: string;
-  icon: React.ReactNode;
-}[] = [
-  {
-    id: "zerodha",
-    icon: <ZerodhaLogo className="h-7 w-24 text-[#387ED1]" />,
-  },
-  {
-    id: "sony",
-    icon: <SonyLogo className="h-7 w-16 dark:text-on-color" />,
-  },
-  {
-    id: "dolby",
-    icon: <DolbyLogo className="h-7 w-16 dark:text-on-color" />,
-  },
-  {
-    id: "accenture",
-    icon: <AccentureLogo className="h-7 w-24 dark:text-on-color" />,
-  },
-];
+import { ORBIT_SOURCE_URL } from "@plane/constants";
 
 export function AuthFooter() {
   return (
-    <div className="flex flex-col items-center gap-6">
-      <span className="text-13 whitespace-nowrap text-tertiary">Join 10,000+ teams building with Plane</span>
-      <div className="flex w-full flex-wrap items-center justify-center gap-x-10 gap-y-4">
-        {BRAND_LOGOS.map((brand) => (
-          <div className="flex h-7 flex-1 items-center justify-center" key={brand.id}>
-            {brand.icon}
-          </div>
-        ))}
-      </div>
+    <div className="flex flex-col items-center gap-1 text-13 text-tertiary">
+      <span>Orbit is based on Plane, licensed under AGPL-3.0.</span>
+      <a href={ORBIT_SOURCE_URL} target="_blank" rel="noopener noreferrer" className="underline">
+        Get the source code
+      </a>
     </div>
   );
 }
