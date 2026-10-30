@@ -133,9 +133,11 @@ def main():
         path = ROOT / rel
         text = path.read_text(encoding="utf-8", newline="").replace("\r\n", "\n")
         for old, new in edits:
+            if new and new in text:
+                continue
             if old in text:
                 text = text.replace(old, new)
-            elif new and new not in text:
+            elif new:
                 raise SystemExit(f"Upstream changed {rel}: cannot find {old!r}")
         path.write_text(text, encoding="utf-8", newline="")
 
