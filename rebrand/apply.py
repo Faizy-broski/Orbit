@@ -18,7 +18,7 @@ SKIP_LINE = re.compile(
     r"Plane Software|^\s*import\s|^\s*(//|\*|/\*)|X-Plane|Let Plane collect|how you use Plane|Total number of users in the Plane"
 )
 SKIP_PATH = re.compile(
-    r"\.stories\.|/\.storybook/|\.d\.ts$|/billing/|/license/|constants/src/payment\.ts$|node_modules|/build/"
+    r"\.stories\.|/\.storybook/|\.d\.ts$|/billing/|apps/web/core/components/license/|constants/src/payment\.ts$|node_modules|/build/"
 )
 
 FRONTEND = [
@@ -135,7 +135,7 @@ def main():
         for old, new in edits:
             if old in text:
                 text = text.replace(old, new)
-            elif not new or new not in text:
+            elif new and new not in text:
                 raise SystemExit(f"Upstream changed {rel}: cannot find {old!r}")
         path.write_text(text, encoding="utf-8", newline="")
 
