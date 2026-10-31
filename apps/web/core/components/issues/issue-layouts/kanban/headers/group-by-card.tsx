@@ -20,7 +20,6 @@ import { CreateUpdateIssueModal } from "@/components/issues/issue-modal/modal";
 // constants
 import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
 import { CreateUpdateEpicModal } from "@/components/epic-modal";
-import { KanbanColumnTitle } from "./state-column-title";
 import { KanbanStateColumnMenu } from "./state-column-menu";
 import { KanbanColumnTitle } from "./state-column-title";
 

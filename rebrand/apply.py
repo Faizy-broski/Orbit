@@ -207,8 +207,6 @@ BOARD_STATE_EDITS = {
     f"{KANBAN}/headers/group-by-card.tsx": [
         ('import { CreateUpdateEpicModal } from "@/components/epic-modal";\n',
          'import { CreateUpdateEpicModal } from "@/components/epic-modal";\n'
-         'import { KanbanColumnTitle } from "./state-column-title";\n'),
-        ('import { KanbanColumnTitle } from "./state-column-title";\n',
          'import { KanbanStateColumnMenu } from "./state-column-menu";\n'
          'import { KanbanColumnTitle } from "./state-column-title";\n'),
         ("        {!disableIssueCreation &&\n          (renderExistingIssueModal ? (",
