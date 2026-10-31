@@ -49,7 +49,7 @@ from plane.api.serializers import (
     ProjectCreateSerializer,
     ProjectUpdateSerializer,
 )
-from plane.app.permissions import ProjectBasePermission, WorkSpaceAdminPermission
+from plane.app.permissions import ROLE, ProjectBasePermission, WorkSpaceAdminPermission, allow_permission
 from plane.utils.openapi import (
     project_docs,
     PROJECT_ID_PARAMETER,
@@ -221,6 +221,7 @@ class ProjectListCreateAPIEndpoint(BaseAPIView):
             409: PROJECT_NAME_TAKEN_RESPONSE,
         },
     )
+    @allow_permission([ROLE.ADMIN], level="WORKSPACE")
     def post(self, request, slug):
         """Create project
 

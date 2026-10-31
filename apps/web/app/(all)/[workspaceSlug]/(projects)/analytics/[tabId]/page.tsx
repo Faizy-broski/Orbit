@@ -45,7 +45,7 @@ function AnalyticsPage({ params }: Route.ComponentProps) {
 
   // permissions
   const canPerformEmptyStateActions = allowPermissions(
-    [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
+    [EUserPermissions.ADMIN],
     EUserPermissionsLevel.WORKSPACE
   );
 

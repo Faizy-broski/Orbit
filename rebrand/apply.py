@@ -43,7 +43,99 @@ EMAIL_LINK = re.compile(
     r"x\.com/planepowers|www\.linkedin\.com/company/planepowers/?)(?=[\"'])"
 )
 
+def admin_only(name, enum="EUserPermissions"):
+    head = f"  const {name} = allowPermissions(\n"
+    tail = "\n    EUserPermissionsLevel.WORKSPACE"
+    return (f"{head}    [{enum}.ADMIN, {enum}.MEMBER],{tail}", f"{head}    [{enum}.ADMIN],{tail}")
+
+
+CREATE_PROJECT_CONST = (
+    "  const canCreateProject = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE);\n"
+)
+ADMIN_DECORATOR = '    @allow_permission([ROLE.ADMIN], level="WORKSPACE")\n'
+
+# The server rules are what enforce this; the web edits only keep the screens honest.
+ADMIN_ONLY_EDITS = {
+    "apps/api/plane/app/views/project/base.py": [
+        ('    @allow_permission([ROLE.ADMIN, ROLE.MEMBER], level="WORKSPACE")\n    def create(self, request, slug):',
+         f"{ADMIN_DECORATOR}    def create(self, request, slug):"),
+    ],
+    "apps/api/plane/api/views/project.py": [
+        ("from plane.app.permissions import ProjectBasePermission, WorkSpaceAdminPermission\n",
+         "from plane.app.permissions import ROLE, ProjectBasePermission, WorkSpaceAdminPermission, allow_permission\n"),
+        ('    )\n    def post(self, request, slug):\n        """Create project',
+         f'    )\n{ADMIN_DECORATOR}    def post(self, request, slug):\n        """Create project'),
+    ],
+    "apps/api/plane/app/views/workspace/invite.py": [
+        ("from plane.app.permissions import WorkSpaceAdminPermission\n",
+         "from plane.app.permissions import ROLE, WorkSpaceAdminPermission, allow_permission\n"),
+        ('    def create(self, request, slug):\n        emails = request.data.get("emails", [])',
+         f'{ADMIN_DECORATOR}    def create(self, request, slug):\n        emails = request.data.get("emails", [])'),
+        ("    def destroy(self, request, slug, pk):\n        workspace_member_invite =",
+         f"{ADMIN_DECORATOR}    def destroy(self, request, slug, pk):\n        workspace_member_invite ="),
+    ],
+    # Accepting a project invite also adds the person to the workspace.
+    "apps/api/plane/app/views/project/invite.py": [
+        ("    @allow_permission([ROLE.ADMIN])\n    def create(self, request, slug, project_id):",
+         f"{ADMIN_DECORATOR}    def create(self, request, slug, project_id):"),
+    ],
+    "apps/web/core/components/project/header.tsx": [admin_only("isAuthorizedUser")],
+    "apps/web/core/components/project/card-list.tsx": [admin_only("canPerformEmptyStateActions")],
+    "apps/web/core/components/workspace/sidebar/projects-list.tsx": [admin_only("isAuthorizedUser")],
+    "apps/web/app/(all)/[workspaceSlug]/(projects)/extended-project-sidebar.tsx": [admin_only("isAuthorizedUser")],
+    "apps/web/core/components/home/widgets/empty-states/no-projects.tsx": [admin_only("canCreateProject")],
+    "apps/web/core/components/power-k/config/creation/command.ts": [admin_only("canCreateProject")],
+    "apps/web/app/(all)/[workspaceSlug]/(projects)/analytics/[tabId]/page.tsx": [
+        admin_only("canPerformEmptyStateActions")
+    ],
+    "apps/web/core/components/issues/workspace-draft/root.tsx": [
+        admin_only("hasMemberLevelPermission", "EUserWorkspaceRoles")
+    ],
+    # hasMemberLevelPermission also guards creating work items here, so it stays as it is.
+    "apps/web/core/components/issues/issue-layouts/empty-states/global-view.tsx": [
+        ("  // derived values\n  const hasMemberLevelPermission",
+         "  // derived values\n"
+         "  const canCreateProject = allowPermissions([EUserWorkspaceRoles.ADMIN], EUserPermissionsLevel.WORKSPACE);\n"
+         "  const hasMemberLevelPermission"),
+        ("              toggleCreateProjectModal(true);\n            },\n            disabled: !hasMemberLevelPermission,",
+         "              toggleCreateProjectModal(true);\n            },\n            disabled: !canCreateProject,"),
+    ],
+    "apps/web/app/(all)/[workspaceSlug]/(settings)/settings/projects/page.tsx": [
+        ('import { PROJECT_TRACKER_ELEMENTS } from "@plane/constants";\n',
+         'import { EUserPermissions, EUserPermissionsLevel, PROJECT_TRACKER_ELEMENTS } from "@plane/constants";\n'),
+        ('import { useCommandPalette } from "@/hooks/store/use-command-palette";\n',
+         'import { useCommandPalette } from "@/hooks/store/use-command-palette";\n'
+         'import { useUserPermissions } from "@/hooks/store/user";\n'),
+        ("  const { toggleCreateProjectModal } = useCommandPalette();\n",
+         "  const { toggleCreateProjectModal } = useCommandPalette();\n"
+         f"  const {{ allowPermissions }} = useUserPermissions();\n{CREATE_PROJECT_CONST}"),
+        ("        <Button\n          onClick={() => toggleCreateProjectModal(true)}",
+         "        <Button\n          disabled={!canCreateProject}\n          onClick={() => toggleCreateProjectModal(true)}"),
+    ],
+    "apps/web/core/components/onboarding/tour/root.tsx": [
+        ('import { Button } from "@plane/propel/button";\n',
+         'import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";\n'
+         'import { Button } from "@plane/propel/button";\n'),
+        ('import { useUser } from "@/hooks/store/user";\n', 'import { useUser, useUserPermissions } from "@/hooks/store/user";\n'),
+        ("  const { data: currentUser } = useUser();\n",
+         f"  const {{ data: currentUser }} = useUser();\n  const {{ allowPermissions }} = useUserPermissions();\n{CREATE_PROJECT_CONST}"),
+        ("{currentStepIndex === TOUR_STEPS.length - 1 && (\n                  <Button",
+         "{currentStepIndex === TOUR_STEPS.length - 1 && canCreateProject && (\n                  <Button"),
+    ],
+}
+
 EXACT_EDITS = {
+    **ADMIN_ONLY_EDITS,
+    "apps/web/core/components/navigation/top-navigation-root.tsx": [
+        ('import { StarUsOnGitHubLink } from "@/app/(all)/[workspaceSlug]/(projects)/star-us-link";\n', ""),
+        ("        <StarUsOnGitHubLink />\n", ""),
+    ],
+    "apps/web/app/(all)/workspace-invitations/page.tsx": [
+        ('import { Boxes, Share2, Star, User2 } from "lucide-react";', 'import { Boxes, User2 } from "lucide-react";'),
+        ('              <EmptySpaceItem Icon={Star} title="Star us on GitHub" href="https://github.com/makeplane" />\n', ""),
+        ('              <EmptySpaceItem\n                Icon={Share2}\n                title="Join our community of active creators"\n'
+         '                href="https://forum.plane.so"\n              />\n', ""),
+    ],
     "packages/constants/src/settings/workspace.ts": [('    WORKSPACE_SETTINGS["billing-and-plans"],\n', "")],
     "apps/web/core/components/workspace/sidebar/help-section/root.tsx": [
         ('import { useTranslation } from "@plane/i18n";\n',

@@ -53,7 +53,7 @@ class ProjectInvitationsViewset(BaseViewSet):
             .select_related("workspace", "workspace__owner")
         )
 
-    @allow_permission([ROLE.ADMIN])
+    @allow_permission([ROLE.ADMIN], level="WORKSPACE")
     def create(self, request, slug, project_id):
         emails = request.data.get("emails", [])
 

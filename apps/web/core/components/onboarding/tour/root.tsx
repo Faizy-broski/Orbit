@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { observer } from "mobx-react";
 // plane imports
+import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { Button } from "@plane/propel/button";
 import { CloseIcon, PlaneLockup } from "@plane/propel/icons";
 // assets
@@ -17,7 +18,7 @@ import PagesTour from "@/app/assets/onboarding/pages.webp?url";
 import ViewsTour from "@/app/assets/onboarding/views.webp?url";
 // hooks
 import { useCommandPalette } from "@/hooks/store/use-command-palette";
-import { useUser } from "@/hooks/store/user";
+import { useUser, useUserPermissions } from "@/hooks/store/user";
 // local imports
 import { TourSidebar } from "./sidebar";
 
@@ -85,6 +86,8 @@ export const TourRoot = observer(function TourRoot(props: TOnboardingTourProps) 
   // store hooks
   const { toggleCreateProjectModal } = useCommandPalette();
   const { data: currentUser } = useUser();
+  const { allowPermissions } = useUserPermissions();
+  const canCreateProject = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE);
 
   const currentStepIndex = TOUR_STEPS.findIndex((tourStep) => tourStep.key === step);
   const currentStep = TOUR_STEPS[currentStepIndex];
@@ -163,7 +166,7 @@ export const TourRoot = observer(function TourRoot(props: TOnboardingTourProps) 
                     </Button>
                   )}
                 </div>
-                {currentStepIndex === TOUR_STEPS.length - 1 && (
+                {currentStepIndex === TOUR_STEPS.length - 1 && canCreateProject && (
                   <Button
                     variant="primary"
                     onClick={() => {

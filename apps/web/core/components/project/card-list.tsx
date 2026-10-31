@@ -48,7 +48,7 @@ export const ProjectCardList = observer(function ProjectCardList(props: TProject
 
   // permissions
   const canPerformEmptyStateActions = allowPermissions(
-    [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
+    [EUserPermissions.ADMIN],
     EUserPermissionsLevel.WORKSPACE
   );
 

@@ -78,7 +78,7 @@ export const ExtendedProjectSidebar = observer(function ExtendedProjectSidebar()
 
   // auth
   const isAuthorizedUser = allowPermissions(
-    [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
+    [EUserPermissions.ADMIN],
     EUserPermissionsLevel.WORKSPACE
   );
 

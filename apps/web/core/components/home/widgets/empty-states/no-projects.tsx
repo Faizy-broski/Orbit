@@ -42,7 +42,7 @@ export const NoProjectsEmptyState = observer(function NoProjectsEmptyState() {
   const { t } = useTranslation();
   // derived values
   const canCreateProject = allowPermissions(
-    [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
+    [EUserPermissions.ADMIN],
     EUserPermissionsLevel.WORKSPACE
   );
   const isWorkspaceAdmin = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE);

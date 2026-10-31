@@ -10,7 +10,52 @@ permissions:
   packages: write
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15.7-alpine
+        env:
+          POSTGRES_USER: plane
+          POSTGRES_PASSWORD: plane
+          POSTGRES_DB: plane
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U plane" --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: valkey/valkey:7.2.11-alpine
+        ports: ["6379:6379"]
+    env:
+      DATABASE_URL: postgresql://plane:plane@localhost:5432/plane
+      REDIS_URL: redis://localhost:6379/
+      AMQP_URL: redis://localhost:6379/1
+      SECRET_KEY: orbit-ci-only
+      AWS_ACCESS_KEY_ID: ci-access-key
+      AWS_SECRET_ACCESS_KEY: ci-secret-key
+      AWS_S3_ENDPOINT_URL: http://localhost:9000
+      AWS_S3_BUCKET_NAME: uploads
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: apps/api/requirements/*.txt
+      - run: sudo apt-get update && sudo apt-get install -y libpq-dev libxml2-dev libxslt1-dev
+      - run: pip install -r requirements/test.txt
+      - name: Admin-only rules and the project and workspace APIs they touch
+        run: >
+          pytest
+          plane/tests/contract/app/test_orbit_admin_only.py
+          plane/tests/contract/app/test_project_app.py
+          plane/tests/contract/app/test_workspace_app.py
+          plane/tests/contract/api/test_projects.py
+
   build:
+    needs: test
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
