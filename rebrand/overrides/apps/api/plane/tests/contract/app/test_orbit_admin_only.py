@@ -144,7 +144,7 @@ class TestBoardColumnOrder:
         ProjectMember.objects.filter(project=project).update(role=ADMIN)
         todo = states["Todo"]
         url = f"/api/workspaces/{workspace.slug}/projects/{project.id}/states/{todo.id}/"
-        assert session_client.patch(url, {"sequence": 50000}, format="json").status_code == status.HTTP_200_OK
+        assert session_client.patch(url, {"sequence": 70000}, format="json").status_code == status.HTTP_200_OK
         todo.refresh_from_db()
         assert todo.group == "unstarted"
         assert self._board(project) == ["Backlog", "Doing", "Done", "Todo"]
