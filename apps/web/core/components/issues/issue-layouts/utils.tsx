@@ -242,8 +242,10 @@ const getStateColumns = ({ projectId }: TGetColumns): IGroupByColumn[] | undefin
   const { getProjectStates, projectStates } = store.state;
   const _states = projectId ? getProjectStates(projectId) : projectStates;
   if (!_states) return;
-  // map project states to group by columns
-  return _states.map((state) => ({
+  // Board order is the state sequence alone, so it can differ from the group order used elsewhere.
+  return [..._states]
+    .sort((stateA, stateB) => stateA.sequence - stateB.sequence)
+    .map((state) => ({
     id: state.id,
     name: state.name,
     icon: (

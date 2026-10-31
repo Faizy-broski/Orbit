@@ -204,6 +204,40 @@ BOARD_STATE_EDITS = {
         ("    )\n    def delete(self, request, slug, project_id, state_id):",
          "    )\n    @allow_permission([ROLE.ADMIN])\n    def delete(self, request, slug, project_id, state_id):"),
     ],
+    "apps/api/plane/db/models/state.py": [
+        ('            # Get the maximum sequence value from the database\n'
+         '            last_id = State.objects.filter(project=self.project).aggregate(largest=models.Max("sequence"))["largest"]\n'
+         '            # if last_id is not None\n'
+         '            if last_id is not None:\n'
+         '                self.sequence = last_id + 15000\n',
+         '            self.sequence = self._orbit_board_sequence()\n'),
+        ('    def save(self, *args, **kwargs):\n        self.slug = slugify(self.name)\n',
+         '    def _orbit_board_sequence(self):\n'
+         '        """Board columns sort by sequence alone, so place a new state after its group."""\n'
+         '        sequences = list(\n'
+         '            State.objects.filter(project=self.project).order_by("sequence").values_list("group", "sequence")\n'
+         '        )\n'
+         '        if not sequences:\n'
+         '            return self.sequence\n'
+         '        groups = [group.value for group in StateGroup if group != StateGroup.TRIAGE]\n'
+         '        if self.group not in groups:\n'
+         '            return sequences[-1][1] + 15000\n'
+         '        same_group = [sequence for group, sequence in sequences if group == self.group]\n'
+         '        earlier = groups[: groups.index(self.group)]\n'
+         '        anchors = same_group or [sequence for group, sequence in sequences if group in earlier]\n'
+         '        if not anchors:\n'
+         '            return sequences[0][1] - 15000\n'
+         '        anchor = max(anchors)\n'
+         '        following = [sequence for _, sequence in sequences if sequence > anchor]\n'
+         '        return (anchor + following[0]) / 2 if following else anchor + 15000\n\n'
+         '    def save(self, *args, **kwargs):\n        self.slug = slugify(self.name)\n'),
+    ],
+    "apps/web/core/components/issues/issue-layouts/utils.tsx": [
+        ("  // map project states to group by columns\n  return _states.map((state) => ({\n    id: state.id,\n    name: state.name,",
+         "  // Board order is the state sequence alone, so it can differ from the group order used elsewhere.\n"
+         "  return [..._states]\n    .sort((stateA, stateB) => stateA.sequence - stateB.sequence)\n"
+         "    .map((state) => ({\n    id: state.id,\n    name: state.name,"),
+    ],
     f"{KANBAN}/headers/group-by-card.tsx": [
         ('import { CreateUpdateEpicModal } from "@/components/epic-modal";\n',
          'import { CreateUpdateEpicModal } from "@/components/epic-modal";\n'

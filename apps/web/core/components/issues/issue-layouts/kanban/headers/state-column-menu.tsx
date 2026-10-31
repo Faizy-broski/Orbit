@@ -8,7 +8,7 @@ import { useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import { ArrowLeft, ArrowRight, Trash2 } from "lucide-react";
-import { EUserPermissions, EUserPermissionsLevel, STATE_GROUPS } from "@plane/constants";
+import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { CustomMenu } from "@plane/ui";
 import { getCurrentStateSequence } from "@plane/utils";
 import { StateDeleteModal } from "@/components/project-states";
@@ -36,18 +36,17 @@ export const KanbanStateColumnMenu = observer(function KanbanStateColumnMenu({ s
   const state = projectStates?.find((projectState) => projectState.id === stateId);
   if (!isProjectAdmin || !projectStates || !state) return null;
 
-  const groupStates = projectStates.filter((projectState) => projectState.group === state.group);
-  const position = groupStates.findIndex((groupState) => groupState.id === stateId);
-  const previous = groupStates[position - 1];
-  const next = groupStates[position + 1];
+  // Board order is sequence alone, so a column can pass other groups while keeping its own group.
+  const boardStates = [...projectStates].sort((a, b) => a.sequence - b.sequence);
+  const position = boardStates.findIndex((boardState) => boardState.id === stateId);
+  const previous = boardStates[position - 1];
+  const next = boardStates[position + 1];
   const canDelete = !state.default && projectStates.length > 1;
 
   const move = (neighbourId: string, edge: "top" | "bottom") => {
-    const sequence = getCurrentStateSequence(groupStates, { groupKey: state.group, id: neighbourId }, edge);
+    const sequence = getCurrentStateSequence(boardStates, { groupKey: state.group, id: neighbourId }, edge);
     moveStatePosition(workspaceSlug.toString(), projectId.toString(), stateId, { sequence });
   };
-
-  const groupLabel = STATE_GROUPS[state.group].label;
 
   return (
     <>
@@ -65,9 +64,6 @@ export const KanbanStateColumnMenu = observer(function KanbanStateColumnMenu({ s
             Move column right
           </span>
         </CustomMenu.MenuItem>
-        {!previous && !next && (
-          <div className="px-2 py-1 text-11 text-tertiary">Only one column in the {groupLabel} group</div>
-        )}
         <CustomMenu.MenuItem disabled={!canDelete} onClick={() => canDelete && setIsDeleteOpen(true)}>
           <span className={`flex items-center gap-2 ${canDelete ? "text-danger-primary" : ""}`}>
             <Trash2 className="size-3.5" />

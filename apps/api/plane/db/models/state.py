@@ -114,13 +114,28 @@ class State(ProjectBaseModel):
         db_table = "states"
         ordering = ("sequence",)
 
+    def _orbit_board_sequence(self):
+        """Board columns sort by sequence alone, so place a new state after its group."""
+        sequences = list(
+            State.objects.filter(project=self.project).order_by("sequence").values_list("group", "sequence")
+        )
+        if not sequences:
+            return self.sequence
+        groups = [group.value for group in StateGroup if group != StateGroup.TRIAGE]
+        if self.group not in groups:
+            return sequences[-1][1] + 15000
+        same_group = [sequence for group, sequence in sequences if group == self.group]
+        earlier = groups[: groups.index(self.group)]
+        anchors = same_group or [sequence for group, sequence in sequences if group in earlier]
+        if not anchors:
+            return sequences[0][1] - 15000
+        anchor = max(anchors)
+        following = [sequence for _, sequence in sequences if sequence > anchor]
+        return (anchor + following[0]) / 2 if following else anchor + 15000
+
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
         if self._state.adding:
-            # Get the maximum sequence value from the database
-            last_id = State.objects.filter(project=self.project).aggregate(largest=models.Max("sequence"))["largest"]
-            # if last_id is not None
-            if last_id is not None:
-                self.sequence = last_id + 15000
+            self.sequence = self._orbit_board_sequence()
 
         return super().save(*args, **kwargs)

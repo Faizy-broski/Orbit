@@ -4,9 +4,11 @@
 
 """Orbit: only workspace admins may create projects or bring new people into a workspace."""
 
+from io import StringIO
 from unittest.mock import patch
 
 import pytest
+from django.core.management import call_command
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -114,6 +116,43 @@ class TestBoardStatesAreProjectAdminOnly:
         assert client.patch(f"{base}{state.id}/", {"name": "Ready"}, format="json").status_code == status.HTTP_403_FORBIDDEN
         payload = {"name": "In Review", "group": "started", "color": "#f59e0b"}
         assert client.post(base, payload, format="json").status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.contract
+@pytest.mark.django_db
+class TestBoardColumnOrder:
+    @pytest.fixture
+    def states(self, workspace, project):
+        rows = [("Backlog", "backlog"), ("Todo", "unstarted"), ("Doing", "started"), ("Done", "completed")]
+        for position, (name, group) in enumerate(rows, start=1):
+            state = State.objects.create(name=name, group=group, color="#000000", project=project, workspace=workspace)
+            State.objects.filter(pk=state.pk).update(sequence=position * 15000)
+        return {state.name: state for state in State.objects.filter(project=project)}
+
+    def _board(self, project):
+        return list(State.objects.filter(project=project).order_by("sequence").values_list("name", flat=True))
+
+    def test_new_state_lands_after_its_own_group(self, workspace, project, states):
+        State.objects.create(name="Review", group="started", color="#000000", project=project, workspace=workspace)
+        assert self._board(project) == ["Backlog", "Todo", "Doing", "Review", "Done"]
+
+    def test_new_state_in_empty_group_follows_earlier_groups(self, workspace, project, states):
+        State.objects.create(name="Dropped", group="cancelled", color="#000000", project=project, workspace=workspace)
+        assert self._board(project) == ["Backlog", "Todo", "Doing", "Done", "Dropped"]
+
+    def test_move_across_groups_keeps_group(self, workspace, session_client, project, states):
+        ProjectMember.objects.filter(project=project).update(role=ADMIN)
+        todo = states["Todo"]
+        url = f"/api/workspaces/{workspace.slug}/projects/{project.id}/states/{todo.id}/"
+        assert session_client.patch(url, {"sequence": 50000}, format="json").status_code == status.HTTP_200_OK
+        todo.refresh_from_db()
+        assert todo.group == "unstarted"
+        assert self._board(project) == ["Backlog", "Doing", "Done", "Todo"]
+
+    def test_normalize_command_restores_group_order(self, project, states):
+        State.objects.filter(pk=states["Todo"].pk).update(sequence=99000)
+        call_command("orbit_normalize_board_order", stdout=StringIO())
+        assert self._board(project) == ["Backlog", "Todo", "Doing", "Done"]
 
 
 @pytest.mark.contract
