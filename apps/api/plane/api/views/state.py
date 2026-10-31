@@ -223,6 +223,7 @@ class StateDetailAPIEndpoint(BaseAPIView):
             400: STATE_CANNOT_DELETE_RESPONSE,
         },
     )
+    @allow_permission([ROLE.ADMIN])
     def delete(self, request, slug, project_id, state_id):
         """Delete state
 

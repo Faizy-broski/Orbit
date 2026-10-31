@@ -21,6 +21,8 @@ import { CreateUpdateIssueModal } from "@/components/issues/issue-modal/modal";
 import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
 import { CreateUpdateEpicModal } from "@/components/epic-modal";
 import { KanbanColumnTitle } from "./state-column-title";
+import { KanbanStateColumnMenu } from "./state-column-menu";
+import { KanbanColumnTitle } from "./state-column-title";
 
 interface IHeaderGroupByCard {
   sub_group_by: TIssueGroupByOptions | undefined;
@@ -149,6 +151,10 @@ export const HeaderGroupByCard = observer(function HeaderGroupByCard(props: IHea
               <Minimize2 width={14} strokeWidth={2} />
             )}
           </button>
+        )}
+
+        {group_by === "state" && !sub_group_by && !verticalAlignPosition && !isEpic && (
+          <KanbanStateColumnMenu stateId={column_id} />
         )}
 
         {!disableIssueCreation &&

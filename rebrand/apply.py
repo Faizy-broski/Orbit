@@ -201,11 +201,21 @@ BOARD_STATE_EDITS = {
          '    )\n    @allow_permission([ROLE.ADMIN])\n    def post(self, request, slug, project_id):\n        """Create state'),
         ('    )\n    def patch(self, request, slug, project_id, state_id):\n        """Update state',
          '    )\n    @allow_permission([ROLE.ADMIN])\n    def patch(self, request, slug, project_id, state_id):\n        """Update state'),
+        ("    )\n    def delete(self, request, slug, project_id, state_id):",
+         "    )\n    @allow_permission([ROLE.ADMIN])\n    def delete(self, request, slug, project_id, state_id):"),
     ],
     f"{KANBAN}/headers/group-by-card.tsx": [
         ('import { CreateUpdateEpicModal } from "@/components/epic-modal";\n',
          'import { CreateUpdateEpicModal } from "@/components/epic-modal";\n'
          'import { KanbanColumnTitle } from "./state-column-title";\n'),
+        ('import { KanbanColumnTitle } from "./state-column-title";\n',
+         'import { KanbanStateColumnMenu } from "./state-column-menu";\n'
+         'import { KanbanColumnTitle } from "./state-column-title";\n'),
+        ("        {!disableIssueCreation &&\n          (renderExistingIssueModal ? (",
+         '        {group_by === "state" && !sub_group_by && !verticalAlignPosition && !isEpic && (\n'
+         "          <KanbanStateColumnMenu stateId={column_id} />\n"
+         "        )}\n\n"
+         "        {!disableIssueCreation &&\n          (renderExistingIssueModal ? ("),
         ("    sub_group_by,\n    column_id,\n", "    sub_group_by,\n    group_by,\n    column_id,\n"),
         ("          <div\n"
          "            className={`line-clamp-1 inline-block truncate overflow-hidden font-medium text-primary ${\n"

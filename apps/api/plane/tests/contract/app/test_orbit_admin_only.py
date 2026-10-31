@@ -12,6 +12,7 @@ from rest_framework.test import APIClient
 
 from plane.db.models import (
     APIToken,
+    Issue,
     Project,
     ProjectMember,
     ProjectMemberInvite,
@@ -76,6 +77,33 @@ class TestBoardStatesAreProjectAdminOnly:
         state.refresh_from_db()
         assert state.name == "Ready"
         assert State.objects.filter(project=project, name="In Review", group="started").exists()
+
+    def test_project_admin_can_reorder_and_delete_empty_state(self, workspace, project, state):
+        client = _client(self._project_member(workspace, project, ADMIN))
+        url = f"/api/workspaces/{workspace.slug}/projects/{project.id}/states/{state.id}/"
+        assert client.patch(url, {"sequence": 12345.5}, format="json").status_code == status.HTTP_200_OK
+        state.refresh_from_db()
+        assert state.sequence == 12345.5
+        assert client.delete(url).status_code == status.HTTP_204_NO_CONTENT
+        assert not State.objects.filter(pk=state.pk).exists()
+
+    def test_state_with_work_items_cannot_be_deleted(self, workspace, project, state):
+        Issue.objects.create(name="Keep me", project=project, workspace=workspace, state=state)
+        client = _client(self._project_member(workspace, project, ADMIN))
+        url = f"/api/workspaces/{workspace.slug}/projects/{project.id}/states/{state.id}/"
+        assert client.delete(url).status_code == status.HTTP_400_BAD_REQUEST
+        assert State.objects.filter(pk=state.pk).exists()
+
+    def test_member_cannot_delete_state(self, workspace, project, state):
+        user = self._project_member(workspace, project, MEMBER)
+        url = f"/api/workspaces/{workspace.slug}/projects/{project.id}/states/{state.id}/"
+        assert _client(user).delete(url).status_code == status.HTTP_403_FORBIDDEN
+        token = APIToken.objects.create(user=user, label="member token", token="orbit-delete-token")
+        client = APIClient()
+        client.credentials(HTTP_X_API_KEY=token.token)
+        v1_url = f"/api/v1/workspaces/{workspace.slug}/projects/{project.id}/states/{state.id}/"
+        assert client.delete(v1_url).status_code == status.HTTP_403_FORBIDDEN
+        assert State.objects.filter(pk=state.pk).exists()
 
     def test_member_cannot_change_states_with_api_token(self, workspace, project, state):
         user = self._project_member(workspace, project, MEMBER)
