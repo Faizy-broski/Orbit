@@ -47,10 +47,11 @@ jobs:
           cache-dependency-path: apps/api/requirements/*.txt
       - run: sudo apt-get update && sudo apt-get install -y libpq-dev libxml2-dev libxslt1-dev
       - run: pip install -r requirements/test.txt
-      - name: Admin-only rules and the project and workspace APIs they touch
+      - name: Orbit rules and the project and workspace APIs they touch
         run: >
           pytest
           plane/tests/contract/app/test_orbit_admin_only.py
+          plane/tests/contract/app/test_orbit_project_members.py
           plane/tests/contract/app/test_project_app.py
           plane/tests/contract/app/test_workspace_app.py
           plane/tests/contract/api/test_projects.py

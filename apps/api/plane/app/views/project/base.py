@@ -41,6 +41,7 @@ from plane.db.models import (
 )
 from plane.db.models.intake import IntakeIssueStatus
 from plane.utils.host import base_host
+from plane.utils.orbit_members import add_workspace_members_to_project
 from plane.utils.order_queryset import PROJECT_ORDER_BY_ALLOWLIST, sanitize_order_by
 
 
@@ -293,6 +294,8 @@ class ProjectViewSet(BaseViewSet):
                     for state in DEFAULT_STATES
                 ]
             )
+
+            add_workspace_members_to_project(serializer.instance)
 
             project = self.get_queryset().filter(pk=serializer.data["id"]).first()
 

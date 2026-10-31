@@ -13,6 +13,7 @@ from plane.db.models import (
     WorkspaceMemberInvite,
 )
 from plane.utils.cache import invalidate_cache_directly
+from plane.utils.orbit_members import add_user_to_workspace_projects
 from plane.bgtasks.event_tracking_task import track_event
 from plane.utils.analytics_events import USER_JOINED_WORKSPACE
 
@@ -85,6 +86,9 @@ def process_workspace_project_invitations(user):
         ],
         ignore_conflicts=True,
     )
+
+    for invite in [*workspace_member_invites, *project_member_invites]:
+        add_user_to_workspace_projects(invite.workspace_id, user.id)
 
     # Delete all the invites
     workspace_member_invites.delete()

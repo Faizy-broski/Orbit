@@ -147,6 +147,45 @@ EXACT_EDITS = {
         ('process.env.VITE_WEBSITE_URL || "https://plane.so"', f'process.env.VITE_WEBSITE_URL || "{ORBIT_URL}"'),
     ],
 }
+HOST_IMPORT = "from plane.utils.host import base_host\n"
+PROJECT_HELPER = "add_workspace_members_to_project"
+USER_HELPER = "add_user_to_workspace_projects"
+
+# Every path that creates a project or activates a workspace member calls a helper in plane/utils/orbit_members.py.
+AUTO_MEMBER_EDITS = {
+    "apps/api/plane/app/views/project/base.py": [
+        (HOST_IMPORT, f"{HOST_IMPORT}from plane.utils.orbit_members import {PROJECT_HELPER}\n"),
+        ('            project = self.get_queryset().filter(pk=serializer.data["id"]).first()\n\n            # Create the model activity',
+         f'            {PROJECT_HELPER}(serializer.instance)\n\n'
+         '            project = self.get_queryset().filter(pk=serializer.data["id"]).first()\n\n            # Create the model activity'),
+    ],
+    "apps/api/plane/api/views/project.py": [
+        (HOST_IMPORT, f"{HOST_IMPORT}from plane.utils.orbit_members import {PROJECT_HELPER}\n"),
+        ("                    project = self.get_queryset().filter(pk=serializer.instance.id).first()\n",
+         f"                    {PROJECT_HELPER}(serializer.instance)\n\n"
+         "                    project = self.get_queryset().filter(pk=serializer.instance.id).first()\n"),
+    ],
+    "apps/api/plane/app/views/workspace/invite.py": [
+        (HOST_IMPORT, f"{HOST_IMPORT}from plane.utils.orbit_members import {USER_HELPER}\n"),
+        ("                    # Set the user last_workspace_id to the accepted workspace\n",
+         f"                    {USER_HELPER}(workspace_invite.workspace_id, user.id)\n\n"
+         "                    # Set the user last_workspace_id to the accepted workspace\n"),
+        ("        # Delete joined workspace invites\n",
+         "        for invitation in workspace_invitations:\n"
+         f"            {USER_HELPER}(invitation.workspace_id, request.user.id)\n\n"
+         "        # Delete joined workspace invites\n"),
+    ],
+    "apps/api/plane/authentication/utils/workspace_project_join.py": [
+        ("from plane.utils.cache import invalidate_cache_directly\n",
+         "from plane.utils.cache import invalidate_cache_directly\n"
+         f"from plane.utils.orbit_members import {USER_HELPER}\n"),
+        ("    # Delete all the invites\n",
+         "    for invite in [*workspace_member_invites, *project_member_invites]:\n"
+         f"        {USER_HELPER}(invite.workspace_id, user.id)\n\n"
+         "    # Delete all the invites\n"),
+    ],
+}
+
 SOURCE_EXPORT = f'\nexport const ORBIT_SOURCE_URL = "{SOURCE_URL}";\n'
 
 
@@ -221,7 +260,7 @@ def main():
     i18n = rebrand_i18n()
     copied = copy_tree(HERE / "assets") + copy_tree(HERE / "overrides")
 
-    for rel, edits in EXACT_EDITS.items():
+    for rel, edits in [*EXACT_EDITS.items(), *AUTO_MEMBER_EDITS.items()]:
         path = ROOT / rel
         text = path.read_text(encoding="utf-8", newline="").replace("\r\n", "\n")
         for old, new in edits:

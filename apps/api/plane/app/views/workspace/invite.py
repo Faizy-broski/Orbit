@@ -31,6 +31,7 @@ from plane.bgtasks.workspace_invitation_task import workspace_invitation
 from plane.db.models import User, Workspace, WorkspaceMember, WorkspaceMemberInvite
 from plane.utils.cache import invalidate_cache, invalidate_cache_directly
 from plane.utils.host import base_host
+from plane.utils.orbit_members import add_user_to_workspace_projects
 from plane.utils.analytics_events import USER_JOINED_WORKSPACE, USER_INVITED_TO_WORKSPACE
 from .. import BaseViewSet
 
@@ -218,6 +219,8 @@ class WorkspaceJoinEndpoint(BaseAPIView):
                             role=workspace_invite.role,
                         )
 
+                    add_user_to_workspace_projects(workspace_invite.workspace_id, user.id)
+
                     # Set the user last_workspace_id to the accepted workspace
                     user.last_workspace_id = workspace_invite.workspace.id
                     user.save()
@@ -319,6 +322,9 @@ class UserWorkspaceInvitationsViewSet(BaseViewSet):
             ],
             ignore_conflicts=True,
         )
+
+        for invitation in workspace_invitations:
+            add_user_to_workspace_projects(invitation.workspace_id, request.user.id)
 
         # Delete joined workspace invites
         workspace_invitations.delete()
