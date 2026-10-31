@@ -128,6 +128,36 @@ class TestJoiningWorkspaceAddsToProjects:
 
 @pytest.mark.contract
 @pytest.mark.django_db
+class TestBoardIsTheDefaultLayout:
+    def test_new_project_view_opens_on_board(self, workspace, project, session_client):
+        ProjectUserProperty.objects.filter(project=project).delete()
+        response = session_client.get(f"/api/workspaces/{workspace.slug}/projects/{project.id}/user-properties/")
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["display_filters"]["layout"] == "kanban"
+        assert response.data["display_filters"]["group_by"] == "state"
+
+    def test_command_switches_list_views_only(self, workspace, project, create_user):
+        ProjectUserProperty.objects.filter(project=project, user=create_user).update(
+            display_filters={"layout": "list", "group_by": None, "order_by": "-created_at"}
+        )
+        calendar_user = _join(workspace, "calendar@orbit.test", MEMBER)
+        ProjectMember.objects.create(project=project, member=calendar_user, role=MEMBER)
+        ProjectUserProperty.objects.filter(project=project, user=calendar_user).update(
+            display_filters={"layout": "calendar", "group_by": None}
+        )
+
+        call_command("orbit_default_board_layout", stdout=StringIO())
+
+        switched = ProjectUserProperty.objects.get(project=project, user=create_user).display_filters
+        assert switched["layout"] == "kanban"
+        assert switched["group_by"] == "state"
+        assert switched["order_by"] == "-created_at"
+        untouched = ProjectUserProperty.objects.get(project=project, user=calendar_user).display_filters
+        assert untouched["layout"] == "calendar"
+
+
+@pytest.mark.contract
+@pytest.mark.django_db
 class TestBackfillCommand:
     def test_adds_existing_staff_and_keeps_removals(self, workspace, project):
         staff = _join(workspace, "staff@orbit.test", MEMBER)

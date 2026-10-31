@@ -238,6 +238,14 @@ BOARD_STATE_EDITS = {
          "  return [..._states]\n    .sort((stateA, stateB) => stateA.sequence - stateB.sequence)\n"
          "    .map((state) => ({\n    id: state.id,\n    name: state.name,"),
     ],
+    "apps/api/plane/db/models/issue.py": [
+        ('def get_default_display_filters():\n    return {\n        "group_by": None,\n'
+         '        "order_by": "-created_at",\n        "type": None,\n        "sub_issue": True,\n'
+         '        "show_empty_groups": True,\n        "layout": "list",\n',
+         'def get_default_display_filters():\n    return {\n        "group_by": "state",\n'
+         '        "order_by": "-created_at",\n        "type": None,\n        "sub_issue": True,\n'
+         '        "show_empty_groups": True,\n        "layout": "kanban",\n'),
+    ],
     f"{KANBAN}/headers/group-by-card.tsx": [
         ('import { CreateUpdateEpicModal } from "@/components/epic-modal";\n',
          'import { CreateUpdateEpicModal } from "@/components/epic-modal";\n'
