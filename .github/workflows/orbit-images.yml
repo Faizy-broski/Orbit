@@ -56,8 +56,19 @@ jobs:
           plane/tests/contract/app/test_workspace_app.py
           plane/tests/contract/api/test_projects.py
 
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run check:types --filter=web
+
   build:
-    needs: test
+    needs: [test, typecheck]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

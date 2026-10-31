@@ -15,6 +15,7 @@ from plane.db.models import (
     Project,
     ProjectMember,
     ProjectMemberInvite,
+    State,
     User,
     WorkspaceMember,
     WorkspaceMemberInvite,
@@ -45,6 +46,46 @@ def project(workspace, create_user):
     project = Project.objects.create(name="Team", identifier="TEAM", workspace=workspace, created_by=create_user)
     ProjectMember.objects.create(workspace=workspace, project=project, member=create_user, role=ADMIN)
     return project
+
+
+@pytest.mark.contract
+@pytest.mark.django_db
+class TestBoardStatesAreProjectAdminOnly:
+    @pytest.fixture
+    def state(self, workspace, project):
+        return State.objects.create(name="Todo", group="unstarted", color="#000000", project=project, workspace=workspace)
+
+    def _project_member(self, workspace, project, role):
+        user = _user_in_workspace(workspace, "state-user@orbit.test", MEMBER)
+        ProjectMember.objects.create(workspace=workspace, project=project, member=user, role=role)
+        return user
+
+    def test_member_cannot_rename_in_app(self, workspace, project, state):
+        client = _client(self._project_member(workspace, project, MEMBER))
+        url = f"/api/workspaces/{workspace.slug}/projects/{project.id}/states/{state.id}/"
+        assert client.patch(url, {"name": "Ready"}, format="json").status_code == status.HTTP_403_FORBIDDEN
+        state.refresh_from_db()
+        assert state.name == "Todo"
+
+    def test_project_admin_can_rename_and_add_in_app(self, workspace, project, state):
+        client = _client(self._project_member(workspace, project, ADMIN))
+        base = f"/api/workspaces/{workspace.slug}/projects/{project.id}/states/"
+        assert client.patch(f"{base}{state.id}/", {"name": "Ready"}, format="json").status_code == status.HTTP_200_OK
+        payload = {"name": "In Review", "group": "started", "color": "#f59e0b"}
+        assert client.post(base, payload, format="json").status_code == status.HTTP_200_OK
+        state.refresh_from_db()
+        assert state.name == "Ready"
+        assert State.objects.filter(project=project, name="In Review", group="started").exists()
+
+    def test_member_cannot_change_states_with_api_token(self, workspace, project, state):
+        user = self._project_member(workspace, project, MEMBER)
+        token = APIToken.objects.create(user=user, label="member token", token="orbit-state-token")
+        client = APIClient()
+        client.credentials(HTTP_X_API_KEY=token.token)
+        base = f"/api/v1/workspaces/{workspace.slug}/projects/{project.id}/states/"
+        assert client.patch(f"{base}{state.id}/", {"name": "Ready"}, format="json").status_code == status.HTTP_403_FORBIDDEN
+        payload = {"name": "In Review", "group": "started", "color": "#f59e0b"}
+        assert client.post(base, payload, format="json").status_code == status.HTTP_403_FORBIDDEN
 
 
 @pytest.mark.contract

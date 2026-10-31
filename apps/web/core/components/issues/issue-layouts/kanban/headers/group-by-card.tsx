@@ -20,6 +20,7 @@ import { CreateUpdateIssueModal } from "@/components/issues/issue-modal/modal";
 // constants
 import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
 import { CreateUpdateEpicModal } from "@/components/epic-modal";
+import { KanbanColumnTitle } from "./state-column-title";
 
 interface IHeaderGroupByCard {
   sub_group_by: TIssueGroupByOptions | undefined;
@@ -39,6 +40,7 @@ interface IHeaderGroupByCard {
 export const HeaderGroupByCard = observer(function HeaderGroupByCard(props: IHeaderGroupByCard) {
   const {
     sub_group_by,
+    group_by,
     column_id,
     icon,
     title,
@@ -121,13 +123,14 @@ export const HeaderGroupByCard = observer(function HeaderGroupByCard(props: IHea
             verticalAlignPosition ? `flex-col items-center` : `w-full flex-row items-baseline overflow-hidden`
           }`}
         >
-          <div
+          <KanbanColumnTitle
+            stateId={column_id}
+            title={title}
+            canRename={group_by === "state" && !sub_group_by && !verticalAlignPosition && !isEpic}
             className={`line-clamp-1 inline-block truncate overflow-hidden font-medium text-primary ${
               verticalAlignPosition ? `max-h-[400px] vertical-lr` : ``
             }`}
-          >
-            {title}
-          </div>
+          />
           <div
             className={`flex-shrink-0 text-13 font-medium text-tertiary ${verticalAlignPosition ? `pr-0.5` : `pl-2`}`}
           >

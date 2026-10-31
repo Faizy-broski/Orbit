@@ -12,7 +12,7 @@ from drf_spectacular.utils import OpenApiResponse, OpenApiRequest
 
 # Module imports
 from plane.api.serializers import StateSerializer
-from plane.app.permissions import ProjectEntityPermission
+from plane.app.permissions import ROLE, ProjectEntityPermission, allow_permission
 from plane.db.models import Issue, State
 from .base import BaseAPIView
 from plane.utils.openapi import (
@@ -77,6 +77,7 @@ class StateListCreateAPIEndpoint(BaseAPIView):
             409: STATE_NAME_EXISTS_RESPONSE,
         },
     )
+    @allow_permission([ROLE.ADMIN])
     def post(self, request, slug, project_id):
         """Create state
 
@@ -269,6 +270,7 @@ class StateDetailAPIEndpoint(BaseAPIView):
             409: EXTERNAL_ID_EXISTS_RESPONSE,
         },
     )
+    @allow_permission([ROLE.ADMIN])
     def patch(self, request, slug, project_id, state_id):
         """Update state
 

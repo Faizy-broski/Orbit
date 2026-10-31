@@ -33,6 +33,7 @@ import type { TRenderQuickActions } from "../list/list-view-types";
 import type { GroupDropLocation } from "../utils";
 import { getGroupByColumns, isWorkspaceLevel, getApproximateCardHeight } from "../utils";
 // components
+import { KanbanAddStateColumn } from "./headers/add-state-column";
 import { HeaderGroupByCard } from "./headers/group-by-card";
 import { KanbanGroup } from "./kanban-group";
 
@@ -234,6 +235,9 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
             </div>
           );
         })}
+      {group_by === "state" && sub_group_by === null && !isEpic && !isWorkspaceLevel(storeType) && (
+        <KanbanAddStateColumn />
+      )}
     </ContentWrapper>
   );
 });

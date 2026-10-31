@@ -186,6 +186,55 @@ AUTO_MEMBER_EDITS = {
     ],
 }
 
+KANBAN = "apps/web/core/components/issues/issue-layouts/kanban"
+
+# Rename and add states from the board; the same rules as the States settings page apply.
+BOARD_STATE_EDITS = {
+    "apps/api/plane/app/views/state/base.py": [
+        ("    @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])\n    def partial_update(self, request, slug, project_id, pk):",
+         "    @allow_permission([ROLE.ADMIN])\n    def partial_update(self, request, slug, project_id, pk):"),
+    ],
+    "apps/api/plane/api/views/state.py": [
+        ("from plane.app.permissions import ProjectEntityPermission\n",
+         "from plane.app.permissions import ROLE, ProjectEntityPermission, allow_permission\n"),
+        ('    )\n    def post(self, request, slug, project_id):\n        """Create state',
+         '    )\n    @allow_permission([ROLE.ADMIN])\n    def post(self, request, slug, project_id):\n        """Create state'),
+        ('    )\n    def patch(self, request, slug, project_id, state_id):\n        """Update state',
+         '    )\n    @allow_permission([ROLE.ADMIN])\n    def patch(self, request, slug, project_id, state_id):\n        """Update state'),
+    ],
+    f"{KANBAN}/headers/group-by-card.tsx": [
+        ('import { CreateUpdateEpicModal } from "@/components/epic-modal";\n',
+         'import { CreateUpdateEpicModal } from "@/components/epic-modal";\n'
+         'import { KanbanColumnTitle } from "./state-column-title";\n'),
+        ("    sub_group_by,\n    column_id,\n", "    sub_group_by,\n    group_by,\n    column_id,\n"),
+        ("          <div\n"
+         "            className={`line-clamp-1 inline-block truncate overflow-hidden font-medium text-primary ${\n"
+         "              verticalAlignPosition ? `max-h-[400px] vertical-lr` : ``\n"
+         "            }`}\n"
+         "          >\n"
+         "            {title}\n"
+         "          </div>\n",
+         "          <KanbanColumnTitle\n"
+         "            stateId={column_id}\n"
+         "            title={title}\n"
+         '            canRename={group_by === "state" && !sub_group_by && !verticalAlignPosition && !isEpic}\n'
+         "            className={`line-clamp-1 inline-block truncate overflow-hidden font-medium text-primary ${\n"
+         "              verticalAlignPosition ? `max-h-[400px] vertical-lr` : ``\n"
+         "            }`}\n"
+         "          />\n"),
+    ],
+    f"{KANBAN}/default.tsx": [
+        ('import { HeaderGroupByCard } from "./headers/group-by-card";\n',
+         'import { KanbanAddStateColumn } from "./headers/add-state-column";\n'
+         'import { HeaderGroupByCard } from "./headers/group-by-card";\n'),
+        ("          );\n        })}\n    </ContentWrapper>",
+         "          );\n        })}\n"
+         '      {group_by === "state" && sub_group_by === null && !isEpic && !isWorkspaceLevel(storeType) && (\n'
+         "        <KanbanAddStateColumn />\n      )}\n"
+         "    </ContentWrapper>"),
+    ],
+}
+
 SOURCE_EXPORT = f'\nexport const ORBIT_SOURCE_URL = "{SOURCE_URL}";\n'
 
 
@@ -260,7 +309,7 @@ def main():
     i18n = rebrand_i18n()
     copied = copy_tree(HERE / "assets") + copy_tree(HERE / "overrides")
 
-    for rel, edits in [*EXACT_EDITS.items(), *AUTO_MEMBER_EDITS.items()]:
+    for rel, edits in [*EXACT_EDITS.items(), *AUTO_MEMBER_EDITS.items(), *BOARD_STATE_EDITS.items()]:
         path = ROOT / rel
         text = path.read_text(encoding="utf-8", newline="").replace("\r\n", "\n")
         for old, new in edits:
