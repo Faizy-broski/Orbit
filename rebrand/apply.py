@@ -285,6 +285,13 @@ BOARD_STATE_EDITS = {
     ],
 }
 
+# Orbit's standard columns for every new project.
+DEFAULT_STATE_EDITS = {
+    "apps/api/plane/db/models/state.py": [('    {\n        "name": "Backlog",\n        "color": "#60646C",\n        "sequence": 15000,\n        "group": StateGroup.BACKLOG.value,\n        "default": True,\n    },\n    {\n        "name": "Todo",\n        "color": "#60646C",\n        "sequence": 25000,\n        "group": StateGroup.UNSTARTED.value,\n    },\n    {\n        "name": "In Progress",\n        "color": "#F59E0B",\n        "sequence": 35000,\n        "group": StateGroup.STARTED.value,\n    },\n    {\n        "name": "Done",\n        "color": "#46A758",\n        "sequence": 45000,\n        "group": StateGroup.COMPLETED.value,\n    },\n    {\n        "name": "Cancelled",\n        "color": "#9AA4BC",\n        "sequence": 55000,\n        "group": StateGroup.CANCELLED.value,\n    },\n', '    # Orbit\'s standard board, left to right. Board order is the sequence, not the group.\n    {\n        "name": "Todo",\n        "color": "#60646C",\n        "sequence": 15000,\n        "group": StateGroup.UNSTARTED.value,\n        "default": True,\n    },\n    {\n        "name": "Bugs",\n        "color": "#E5484D",\n        "sequence": 30000,\n        "group": StateGroup.UNSTARTED.value,\n    },\n    {\n        "name": "In Progress",\n        "color": "#F59E0B",\n        "sequence": 45000,\n        "group": StateGroup.STARTED.value,\n    },\n    {\n        "name": "Under Deployment",\n        "color": "#8E4EC6",\n        "sequence": 60000,\n        "group": StateGroup.STARTED.value,\n    },\n    {\n        "name": "QA",\n        "color": "#3E63DD",\n        "sequence": 75000,\n        "group": StateGroup.STARTED.value,\n    },\n    {\n        "name": "Done",\n        "color": "#46A758",\n        "sequence": 90000,\n        "group": StateGroup.COMPLETED.value,\n    },\n    {\n        "name": "Blocked",\n        "color": "#DC2626",\n        "sequence": 105000,\n        "group": StateGroup.STARTED.value,\n    },\n    {\n        "name": "Credentials",\n        "color": "#9AA4BC",\n        "sequence": 120000,\n        "group": StateGroup.BACKLOG.value,\n    },\n')],
+    "apps/api/plane/tests/contract/app/test_project_app.py": [('        assert states.count() == 5\n        expected_states = ["Backlog", "Todo", "In Progress", "Done", "Cancelled"]\n', '        assert states.count() == 8\n        expected_states = ["Todo", "Bugs", "In Progress", "Under Deployment", "QA", "Done", "Blocked", "Credentials"]\n')],
+    "apps/api/plane/tests/contract/api/test_projects.py": [('        assert State.objects.filter(project=project).count() == 5\n', '        assert State.objects.filter(project=project).count() == 8\n')],
+}
+
 SOURCE_EXPORT = f'\nexport const ORBIT_SOURCE_URL = "{SOURCE_URL}";\n'
 
 
@@ -359,7 +366,7 @@ def main():
     i18n = rebrand_i18n()
     copied = copy_tree(HERE / "assets") + copy_tree(HERE / "overrides")
 
-    for rel, edits in [*EXACT_EDITS.items(), *AUTO_MEMBER_EDITS.items(), *BOARD_STATE_EDITS.items()]:
+    for rel, edits in [*EXACT_EDITS.items(), *AUTO_MEMBER_EDITS.items(), *BOARD_STATE_EDITS.items(), *DEFAULT_STATE_EDITS.items()]:
         path = ROOT / rel
         text = path.read_text(encoding="utf-8", newline="").replace("\r\n", "\n")
         for old, new in edits:

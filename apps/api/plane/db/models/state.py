@@ -22,36 +22,55 @@ class StateGroup(models.TextChoices):
 
 # Default states
 DEFAULT_STATES = [
-    {
-        "name": "Backlog",
-        "color": "#60646C",
-        "sequence": 15000,
-        "group": StateGroup.BACKLOG.value,
-        "default": True,
-    },
+    # Orbit's standard board, left to right. Board order is the sequence, not the group.
     {
         "name": "Todo",
         "color": "#60646C",
-        "sequence": 25000,
+        "sequence": 15000,
+        "group": StateGroup.UNSTARTED.value,
+        "default": True,
+    },
+    {
+        "name": "Bugs",
+        "color": "#E5484D",
+        "sequence": 30000,
         "group": StateGroup.UNSTARTED.value,
     },
     {
         "name": "In Progress",
         "color": "#F59E0B",
-        "sequence": 35000,
+        "sequence": 45000,
+        "group": StateGroup.STARTED.value,
+    },
+    {
+        "name": "Under Deployment",
+        "color": "#8E4EC6",
+        "sequence": 60000,
+        "group": StateGroup.STARTED.value,
+    },
+    {
+        "name": "QA",
+        "color": "#3E63DD",
+        "sequence": 75000,
         "group": StateGroup.STARTED.value,
     },
     {
         "name": "Done",
         "color": "#46A758",
-        "sequence": 45000,
+        "sequence": 90000,
         "group": StateGroup.COMPLETED.value,
     },
     {
-        "name": "Cancelled",
+        "name": "Blocked",
+        "color": "#DC2626",
+        "sequence": 105000,
+        "group": StateGroup.STARTED.value,
+    },
+    {
+        "name": "Credentials",
         "color": "#9AA4BC",
-        "sequence": 55000,
-        "group": StateGroup.CANCELLED.value,
+        "sequence": 120000,
+        "group": StateGroup.BACKLOG.value,
     },
     {
         "name": "Triage",

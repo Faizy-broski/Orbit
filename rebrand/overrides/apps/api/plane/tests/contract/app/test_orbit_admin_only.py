@@ -149,6 +149,17 @@ class TestBoardColumnOrder:
         assert todo.group == "unstarted"
         assert self._board(project) == ["Backlog", "Doing", "Done", "Todo"]
 
+    def test_new_project_gets_the_orbit_columns_in_order(self, workspace, session_client):
+        response = session_client.post(
+            f"/api/workspaces/{workspace.slug}/projects/", {"name": "Fresh", "identifier": "FRESH"}, format="json"
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        project = Project.objects.get(identifier="FRESH")
+        assert self._board(project) == [
+            "Todo", "Bugs", "In Progress", "Under Deployment", "QA", "Done", "Blocked", "Credentials",
+        ]
+        assert State.objects.get(project=project, default=True).name == "Todo"
+
     def test_normalize_command_restores_group_order(self, project, states):
         State.objects.filter(pk=states["Todo"].pk).update(sequence=99000)
         call_command("orbit_normalize_board_order", stdout=StringIO())
